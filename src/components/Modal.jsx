@@ -1,0 +1,27 @@
+import React from "react";
+import { createPortal } from "react-dom";
+
+const Modal = ({isOpen, setIsOpen, header, footer, children}) => {
+  return createPortal(
+    <div
+     
+      class={`fixed  inset-0 z-50 flex justify-center items-center w-full  bg-neutral-700/10 backdrop-blur-[2px] ${isOpen?'':'hidden'}`}
+    >
+      <div class="relative p-4 w-full max-w-md ">
+        <div class="relative pb-4 bg-neutral-700  rounded-lg shadow-sm">
+          {/* <=========== Header ==========> */}
+          {header}
+          {/* <=========== Children ==========> */}
+          {children}
+          {/* <=========== Footer ==========> */}
+          {footer}
+
+
+        </div>
+      </div>
+    </div>,
+    document.getElementById("portal")
+  );
+};
+
+export default Modal;
