@@ -19,6 +19,8 @@ export default function MemberDetails({
       document.body.style.overflow = "unset";
     }
 
+ 
+
     return () => {
       document.body.style.overflow = "unset";
     };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import  { useState } from 'react'
 import MemberDetails from '../../pages/MemberDetails'
 
 export default function DetailedMember({member,setAllMembers}) {

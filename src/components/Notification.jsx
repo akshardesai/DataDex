@@ -15,9 +15,10 @@ export default function Notification({ notification, setNotification }) {
       <div
         className={`
       
+        
         backdrop-blur-2xl
         fixed top-[21.5%] md:top-[15%] -right-3 
-        w-fit px-3 py-2 md:px-4  z-50
+        w-fit px-3 py-2 md:px-4  z-[10010]
         bg-gray-900 
           rounded-xl shadow-2xl
         transition-all duration-500 ease-in-out border

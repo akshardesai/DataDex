@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import Modal from "../Modal";
 import { editMemberDB } from "../../utils/AllMembers";
 import Notification from "../Notification";

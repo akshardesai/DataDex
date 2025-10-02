@@ -106,7 +106,7 @@ const AllMembers = () => {
 
   useEffect(() => {
     fetchInitialMembers();
-    console.log("<=========rendere fired==========>");
+    console.log("<=========render fired==========>");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -396,7 +396,7 @@ const AllMembers = () => {
           <div className="flex flex-col gap-3 sm:gap-4">
             {/* Search Bar - Always Visible */}
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="relative flex-1 lg:flex-none lg:w-96">
+              <div className="relative flex-1 lg:flex-none lg:w-79">
                 <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
                   <svg
                     className="w-4 h-4 sm:w-5 sm:h-5 text-white"
@@ -413,7 +413,7 @@ const AllMembers = () => {
                   </svg>
                 </div>
                 <input
-                  className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border-2 border-neutral-700/50 focus:border-lime-500 outline-none bg-neutral-900/60 backdrop-blur-sm pl-10 sm:pl-12 pr-3 sm:pr-4 font-sans text-xs sm:text-sm font-normal text-white placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
+                  className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border border-neutral-700/50 focus:border-lime-500 outline-none bg-neutral-900/60 backdrop-blur-sm pl-10 sm:pl-12 pr-3 sm:pr-4 font-sans text-xs sm:text-sm font-normal text-white placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
