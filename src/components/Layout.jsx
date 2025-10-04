@@ -48,21 +48,45 @@ const Layout = () => {
                 <path d="M2 22C2 17.5817 5.58172 14 10 14C14.4183 14 18 17.5817 18 22H2ZM10 13C6.685 13 4 10.315 4 7C4 3.685 6.685 1 10 1C13.315 1 16 3.685 16 7C16 10.315 13.315 13 10 13ZM17.3628 15.2332C20.4482 16.0217 22.7679 18.7235 22.9836 22H20C20 19.3902 19.0002 17.0139 17.3628 15.2332ZM15.3401 12.9569C16.9728 11.4922 18 9.36607 18 7C18 5.58266 17.6314 4.25141 16.9849 3.09687C19.2753 3.55397 21 5.57465 21 8C21 10.7625 18.7625 13 16 13C15.7763 13 15.556 12.9853 15.3401 12.9569Z"></path>
               </svg>
             </NavLink>
-            <NavLink className="w-8 h-8 text-gray-400 hover:text-white">
+            <NavLink
+              to={"requests"}
+              className={({ isActive }) =>
+                `${
+                  isActive
+                    ? "bg-lime-300 text-black "
+                    : "text-gray-400 hover:text-black hover:bg-lime-300"
+                } w-8 h-8 flex justify-center items-center rounded-lg`
+              }
+            >
               <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
+                className="w-5 h-5 mx-auto"
+                xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
+                fill="currentColor"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
+                <path d="M5.76282 17H20V5H4V18.3851L5.76282 17ZM6.45455 19L2 22.5V4C2 3.44772 2.44772 3 3 3H21C21.5523 3 22 3.44772 22 4V18C22 18.5523 21.5523 19 21 19H6.45455ZM11 14H13V16H11V14ZM8.56731 8.81346C8.88637 7.20919 10.302 6 12 6C13.933 6 15.5 7.567 15.5 9.5C15.5 11.433 13.933 13 12 13H11V11H12C12.8284 11 13.5 10.3284 13.5 9.5C13.5 8.67157 12.8284 8 12 8C11.2723 8 10.6656 8.51823 10.5288 9.20577L8.56731 8.81346Z"></path>
               </svg>
             </NavLink>
+            <NavLink
+              to={"dailycheckins"}
+              className={({ isActive }) =>
+                `${
+                  isActive
+                    ? "bg-lime-300 text-black "
+                    : "text-gray-400 hover:text-black hover:bg-lime-300"
+                } w-8 h-8 flex justify-center items-center rounded-lg`
+              }
+            >
+              <svg
+                className="w-5 h-5 mx-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M7 3V1H9V3H15V1H17V3H21C21.5523 3 22 3.44772 22 4V9H20V5H17V7H15V5H9V7H7V5H4V19H10V21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H7ZM17 12C14.7909 12 13 13.7909 13 16C13 18.2091 14.7909 20 17 20C19.2091 20 21 18.2091 21 16C21 13.7909 19.2091 12 17 12ZM11 16C11 12.6863 13.6863 10 17 10C20.3137 10 23 12.6863 23 16C23 19.3137 20.3137 22 17 22C13.6863 22 11 19.3137 11 16ZM16 13V16.4142L18.2929 18.7071L19.7071 17.2929L18 15.5858V13H16Z"></path>
+              </svg>
+            </NavLink>
+
             <button className="w-8 h-8 text-gray-400 hover:text-white">
               <svg
                 className="w-5 h-5"

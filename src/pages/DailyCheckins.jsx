@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const Requests = () => {
+const DailyCheckins = () => {
   const [showMobileControls, setShowMobileControls] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
@@ -14,15 +14,20 @@ const Requests = () => {
               <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                 <div className="w-1 h-6 sm:h-8 bg-gradient-to-b from-lime-400 to-lime-600 rounded-full"></div>
                 <h5 className="font-sans text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white">
-                  Requests Manager
+                  Daily Check-ins
                 </h5>
               </div>
               <p className="font-sans text-xs sm:text-sm text-gray-400 ml-3 sm:ml-4">
-                Track and manage member requests
+                Track and manage daily member check-ins
               </p>
             </div>
 
-      
+            {/* Add Check-in button - Desktop only */}
+            <div className="hidden lg:block flex-shrink-0">
+              <button className="px-4 py-2 bg-lime-500 text-black rounded-lg hover:bg-lime-400 transition-all">
+                New Check-in
+              </button>
+            </div>
           </div>
 
           {/* Enhanced Controls Section */}
@@ -44,7 +49,7 @@ const Requests = () => {
                 </div>
                 <input
                   className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border-2 border-neutral-700/50 focus:border-lime-300 outline-none bg-neutral-900/60 backdrop-blur-sm pr-10 sm:pr-12 pl-3 sm:pl-4 font-sans text-xs sm:text-sm font-normal text-white placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
-                  placeholder="Search requests..."
+                  placeholder="Search check-ins..."
                 />
               </div>
 
@@ -85,7 +90,7 @@ const Requests = () => {
               <div className="flex-shrink-0">
                 <nav className="inline-flex w-full">
                   <ul className="relative flex flex-row w-full p-1.5 rounded-xl bg-neutral-900/80 backdrop-blur-sm border border-neutral-700/50 shadow-lg">
-                    {["all", "pending", "completed"].map((tab) => (
+                    {["all", "today", "weekly"].map((tab) => (
                       <li
                         key={tab}
                         role="tab"
@@ -106,9 +111,9 @@ const Requests = () => {
                 </nav>
               </div>
 
-              {/* Add Request Button - Mobile */}
+              {/* Add Check-in Button - Mobile */}
               <button className="w-full px-4 py-2 bg-lime-500 text-black rounded-lg hover:bg-lime-400 transition-all">
-                New Request
+                New Check-in
               </button>
             </div>
 
@@ -118,7 +123,7 @@ const Requests = () => {
               <div className="flex-shrink-0">
                 <nav className="inline-flex">
                   <ul className="relative flex flex-row p-1.5 rounded-xl bg-neutral-900/80 backdrop-blur-sm border-2 border-neutral-700/50 shadow-lg">
-                    {["all", "pending", "completed"].map((tab) => (
+                    {["all", "today", "weekly"].map((tab) => (
                       <li
                         key={tab}
                         role="tab"
@@ -147,17 +152,15 @@ const Requests = () => {
       <div className="flex-1 overflow-hidden bg-neutral-900/30">
         {/* Desktop/Tablet View */}
         <div className="hidden lg:block h-full overflow-auto px-6 lg:px-8 py-6">
-          {/* Add your desktop table view content here */}
           <div className="bg-neutral-900/60 backdrop-blur-sm rounded-xl border border-neutral-700/50 overflow-hidden shadow-xl p-6">
-            <p className="text-gray-400 text-center">No requests available</p>
+            <p className="text-gray-400 text-center">No check-ins available</p>
           </div>
         </div>
 
         {/* Mobile Card View */}
         <div className="lg:hidden px-2 sm:px-3 h-full overflow-y-auto py-2 sm:py-3">
-          {/* Add your mobile card view content here */}
           <div className="text-center py-6">
-            <p className="text-gray-400 text-sm">No requests available</p>
+            <p className="text-gray-400 text-sm">No check-ins available</p>
           </div>
         </div>
       </div>
@@ -165,4 +168,4 @@ const Requests = () => {
   );
 };
 
-export default Requests;
+export default DailyCheckins;

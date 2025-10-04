@@ -1,4 +1,4 @@
-import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc,  serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 
@@ -13,15 +13,15 @@ function manualCreatedAt(date = new Date()) {
 }
 
 
+
 export async function addMemberDB(member){
  try {
     const memberData={
         ...member,
         memberships:[],
-        createdAt:serverTimestamp()
-    }
-     
-
+        createdAt: serverTimestamp(),
+        keywords:[member.name,member.idNo,member.number]
+     }
     const documentRef = await addDoc(membersCollectionRef, memberData);
     return {success:true,data:{id:documentRef.id,...memberData}};
  } catch (error) {

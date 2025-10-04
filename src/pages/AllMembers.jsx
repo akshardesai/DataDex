@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import AddMember from "../components/allMembers/AddMember";
 import {
   collection,
+  doc,
   getDocs,
   limit,
   orderBy,
   query,
   startAfter,
+  where,
 } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import EditMember from "../components/allMembers/EditMember";
@@ -22,18 +24,24 @@ const AllMembers = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [allMembers, setAllMembers] = useState([]);
-
   const [showMobileControls, setShowMobileControls] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState(null);
-
   const [notification, setNotification] = useState({
     state: false,
     message: "",
   });
   const [lastVisible, setLastVisible] = useState(null);
+  const [lastSearchVisible, setLastSearchVisible] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
+  const [searchedMembers, setSearchedMembers] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const memberToDisplay = isSearching ? searchedMembers : allMembers;
   const membersCollectionRef = collection(db, "members");
+
+
+  
 
   //function the fetch the first page of members
   const fetchInitialMembers = async () => {
@@ -72,16 +80,33 @@ const AllMembers = () => {
   //function to fetch next page / more members
 
   const handleLoadMore = async () => {
-    if (!lastVisible || !hasMore) return;
+    // Determine which "last visible" document to use as the pagination cursor
+    const lastDocToStartAfter = isSearching ? lastSearchVisible : lastVisible;
 
-    setNotification({ state: true, message: "Laoding more members....." });
+    if (!lastDocToStartAfter || !hasMore) return;
+
+    setNotification({ state: true, message: "Loading more members....." });
     try {
-      const q = query(
-        membersCollectionRef,
-        orderBy("createdAt", "desc"),
-        limit(MEMBERS_PER_PAGE),
-        startAfter(lastVisible)
-      );
+      let q; // Query will be defined based on whether we are searching
+
+      if (isSearching) {
+        // Build the query for loading more SEARCH results
+        q = query(
+          membersCollectionRef,
+          where("keywords", "array-contains", searchQuery.toLowerCase()),
+          orderBy("createdAt", "desc"),
+          limit(MEMBERS_PER_PAGE),
+          startAfter(lastDocToStartAfter) // Use the search cursor
+        );
+      } else {
+        // Build the query for loading more ALL members (your original logic)
+        q = query(
+          membersCollectionRef,
+          orderBy("createdAt", "desc"),
+          limit(MEMBERS_PER_PAGE),
+          startAfter(lastDocToStartAfter) // Use the main list cursor
+        );
+      }
 
       const documentSnapshots = await getDocs(q);
       const newMembers = documentSnapshots.docs.map((doc) => ({
@@ -89,10 +114,17 @@ const AllMembers = () => {
         ...doc.data(),
       }));
 
-      setAllMembers((prevMembers) => [...prevMembers, ...newMembers]);
-
       const lastDoc = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-      setLastVisible(lastDoc);
+
+      if (isSearching) {
+        // Add new members to the SEARCH list and update the SEARCH cursor
+        setSearchedMembers((prevMembers) => [...prevMembers, ...newMembers]);
+        setLastSearchVisible(lastDoc);
+      } else {
+        // Add new members to the MAIN list and update the MAIN cursor
+        setAllMembers((prevMembers) => [...prevMembers, ...newMembers]);
+        setLastVisible(lastDoc);
+      }
 
       if (newMembers.length < MEMBERS_PER_PAGE) {
         setHasMore(false);
@@ -104,15 +136,59 @@ const AllMembers = () => {
     }
   };
 
+  const handleSearch = async () => {
+    if (searchQuery.trim() === "") {
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    setNotification({ state: true, message: "Searching members...." });
+
+    try {
+      const q = query(
+        membersCollectionRef,
+        where("keywords", "array-contains", searchQuery.toLowerCase()),
+        orderBy("createdAt", "desc"),
+        limit(MEMBERS_PER_PAGE)
+      );
+
+      const documentSnapshots = await getDocs(q);
+      const members = documentSnapshots.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setSearchedMembers(members);
+      const lastDoc = documentSnapshots.docs[documentSnapshots.docs.length - 1];
+      setLastSearchVisible(lastDoc);
+      setHasMore(members.length >= MEMBERS_PER_PAGE);
+    } catch (error) {
+      console.log(`error searching memebers ${error}`);
+    } finally {
+      setNotification({ state: false, message: "" });
+    }
+  };
+
   useEffect(() => {
     fetchInitialMembers();
     console.log("<=========render fired==========>");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredMembers = allMembers.filter((member) =>
-    member.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Add this useEffect to your component
+  useEffect(() => {
+    // If the search query is cleared, revert to the main list
+    if (searchQuery.trim() === "") {
+     
+      if (isSearching) {
+        // Only act if we were previously searching
+        setIsSearching(false);
+        // Restore the pagination status of the main list
+        setHasMore(allMembers.length >= MEMBERS_PER_PAGE);
+      }
+    }
+  }, [searchQuery, isSearching, allMembers.length]);
 
   const MobileCard = ({ member }) => {
     const isExpanded = expandedCardId === member.id;
@@ -397,23 +473,20 @@ const AllMembers = () => {
             {/* Search Bar - Always Visible */}
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="relative flex-1 lg:flex-none lg:w-79">
-                <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                    />
-                  </svg>
+                <div className="absolute  inset-y-0 right-3 sm:right-4 z-1 flex items-center ">
+                  <button onClick={handleSearch}>
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5 fill-white "
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M11 2C15.968 2 20 6.032 20 11C20 15.968 15.968 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2ZM11 18C14.8675 18 18 14.8675 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18ZM19.4853 18.0711L22.3137 20.8995L20.8995 22.3137L18.0711 19.4853L19.4853 18.0711Z"></path>
+                    </svg>
+                  </button>
                 </div>
                 <input
-                  className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border border-neutral-700/50 focus:border-lime-500 outline-none bg-neutral-900/60 backdrop-blur-sm pl-10 sm:pl-12 pr-3 sm:pr-4 font-sans text-xs sm:text-sm font-normal text-white placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
+                  className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border-2 border-neutral-700/50 focus:border-lime-300 outline-none bg-neutral-900/60 backdrop-blur-sm pr-10 sm:pr-12 pl-3 sm:pl-4 font-sans text-xs sm:text-sm font-normal text-white placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -489,7 +562,7 @@ const AllMembers = () => {
               {/* Stylish Tabs */}
               <div className="flex-shrink-0">
                 <nav className="inline-flex">
-                  <ul className="relative flex flex-row p-1.5 rounded-xl bg-neutral-900/80 backdrop-blur-sm border border-neutral-700/50 shadow-lg">
+                  <ul className="relative flex flex-row p-1.5 rounded-xl bg-neutral-900/80 backdrop-blur-sm border-2 border-neutral-700/50 shadow-lg">
                     {["all", "active", "expired"].map((tab) => (
                       <li
                         key={tab}
@@ -568,7 +641,7 @@ const AllMembers = () => {
                 </thead>
 
                 <tbody className="divide-y divide-neutral-700/30">
-                  {allMembers.map((member) => (
+                  {memberToDisplay.map((member) => (
                     <tr
                       key={member.id}
                       className="group hover:bg-neutral-800/40 transition-all duration-200"
@@ -668,7 +741,7 @@ const AllMembers = () => {
             {hasMore && !notification.state && (
               <button
                 onClick={handleLoadMore}
-                className="group relative px-8 py-3 bg-gradient-to-r from-lime-400 to-lime-500 text-black font-bold rounded-xl hover:from-lime-500 hover:to-lime-600 transition-all duration-300 shadow-lg hover:shadow-lime-500/50 transform hover:scale-105"
+                className="group relative px-8 py-3 bg-gradient-to-r from-lime-200 to-lime-300 text-black font-bold rounded-xl hover:from-lime-400 hover:to-lime-200 transition-all duration-300 shadow-lg hover:shadow-lime-500/50 transform hover:scale-105"
               >
                 <span className="relative z-10">Load More Members</span>
                 <div className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
@@ -694,7 +767,7 @@ const AllMembers = () => {
 
         {/* Mobile Card View - Optimized Grid Layout */}
         <div className="lg:hidden px-2 sm:px-3 h-full overflow-y-auto py-2 sm:py-3">
-          {filteredMembers.length === 0 ? (
+          {memberToDisplay.length === 0 ? (
             <div className="text-center py-6 sm:py-8">
               <p className="text-gray-400 text-sm">
                 No members found matching your search.
@@ -703,7 +776,7 @@ const AllMembers = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-                {filteredMembers.map((member) => (
+                {memberToDisplay.map((member) => (
                   <MobileCard key={member.id} member={member} />
                 ))}
               </div>
@@ -734,7 +807,7 @@ const AllMembers = () => {
         </div>
 
         {/* Enhanced Empty State */}
-        {!hasMore && filteredMembers.length === 0 && (
+        {!hasMore && memberToDisplay.length === 0 && (
           <div className="hidden lg:flex flex-col items-center justify-center py-20">
             <div className="relative">
               <div className="absolute inset-0 bg-lime-500/10 blur-3xl rounded-full"></div>
