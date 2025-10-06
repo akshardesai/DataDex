@@ -11,10 +11,14 @@ import {
   startAfter,
   where,
 } from "firebase/firestore";
-import { db } from "../utils/firebase";
+import { db } from "../../commonUtils/firebase";
 import EditMember from "../components/allMembers/EditMember";
 import DeleteMember from "../components/allMembers/DeleteMember";
-import { calculateDaysLeft } from "../utils/AllMembers";
+import {
+  calculateDaysLeft,
+  generateCodeDB,
+  logoutUserDB,
+} from "../utils/AllMembers";
 import DetailedMember from "../components/allMembers/DetailedMember";
 import Notification from "../components/Notification";
 
@@ -39,9 +43,6 @@ const AllMembers = () => {
 
   const memberToDisplay = isSearching ? searchedMembers : allMembers;
   const membersCollectionRef = collection(db, "members");
-
-
-  
 
   //function the fetch the first page of members
   const fetchInitialMembers = async () => {
@@ -170,6 +171,44 @@ const AllMembers = () => {
     }
   };
 
+  const updateCode = async (member) => {
+    const response = await generateCodeDB(member);
+
+    if (response.success) {
+      setAllMembers((prevMembers) => {
+        const updatedMembers = prevMembers.map((m) => {
+          if (m.id === member.id) {
+            return { ...m, code: response.data };
+          }
+          return m;
+        });
+        return updatedMembers;
+      });
+    } else {
+      console.log("Error in updating code", response.error);
+    }
+  };
+
+  const updateLoginStatus = async (member) => {
+    if (!member.loginStatus) return;
+
+    const response = await logoutUserDB(member);
+
+    if (response.success) {
+      setAllMembers((prevMember) => {
+        const updatedMembers = prevMember.map((m) => {
+          if (m.id === member.id) {
+            return { ...m, loginStatus: false };
+          }
+          return m;
+        });
+        return updatedMembers;
+      });
+    } else {
+      console.log(`failed to update login status ${response.error}`);
+    }
+  };
+
   useEffect(() => {
     fetchInitialMembers();
     console.log("<=========render fired==========>");
@@ -180,7 +219,6 @@ const AllMembers = () => {
   useEffect(() => {
     // If the search query is cleared, revert to the main list
     if (searchQuery.trim() === "") {
-     
       if (isSearching) {
         // Only act if we were previously searching
         setIsSearching(false);
@@ -629,6 +667,16 @@ const AllMembers = () => {
                     </th>
                     <th className="px-5 py-4">
                       <p className="font-sans text-xs font-bold uppercase tracking-wider text-gray-300">
+                        Code
+                      </p>
+                    </th>
+                    <th className="px-5 py-4">
+                      <p className="font-sans text-xs font-bold uppercase tracking-wider text-gray-300">
+                        Login Status
+                      </p>
+                    </th>
+                    <th className="px-5 py-4">
+                      <p className="font-sans text-xs font-bold uppercase tracking-wider text-gray-300">
                         Address
                       </p>
                     </th>
@@ -705,6 +753,24 @@ const AllMembers = () => {
                               : null
                           )}
                         </span>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <button
+                          onClick={() => updateCode(member)}
+                          className="hover:cursor-pointer inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50 text-gray-200 border border-neutral-600"
+                        >
+                          {member.code ? member.code : "N/A"}
+                        </button>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <button
+                          onClick={() => updateLoginStatus(member)}
+                          className="hover:cursor-pointer inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50 text-gray-200 border border-neutral-600"
+                        >
+                          {member.loginStatus ? "Logged In" : "Logged Out"}
+                        </button>
                       </td>
 
                       <td className="px-5 py-4">

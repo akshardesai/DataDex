@@ -122,7 +122,7 @@ export default function AddMember({setAllMembers}) {
         }
         footer={
           <button
-          onClick={(e)=>addmemberSubmit(e)}
+            onClick={(e) => addmemberSubmit(e)}
             type="submit"
             class=" -mt-2 text-black flex justify-self-center  items-center bg-lime-300 hover:bg-lime-400 focus:ring-4 focus:outline-none focus:ring-lime-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
           >
@@ -211,22 +211,21 @@ export default function AddMember({setAllMembers}) {
               >
                 Gender
               </label>
-            <select
-              value={memberInfo.gender} // controlled input
-              onChange={(e) =>
-                setMemberInfo({ ...memberInfo, gender: e.target.value })
-              }
-              id="category"
-              class="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
-            >
-                <option  value="male">Male</option>
+              <select
+                value={memberInfo.gender} // controlled input
+                onChange={(e) =>
+                  setMemberInfo({ ...memberInfo, gender: e.target.value })
+                }
+                id="category"
+                class="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+              >
+                <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
             </div>
 
-            
-                        <div class="col-span-2">
+            <div class="col-span-1">
               <label
                 for="name"
                 class="block mb-2 text-sm font-medium text-white"
@@ -242,7 +241,27 @@ export default function AddMember({setAllMembers}) {
                 name="name"
                 id="name"
                 class="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                placeholder="Exam preparation?,  Job preparation? studying what?"
+                placeholder="Exam preparation?"
+                required=""
+              />
+            </div>
+            <div class="col-span-1">
+              <label
+                for="name"
+                class="block mb-2 text-sm font-medium text-white"
+              >
+                Image Link
+              </label>
+              <input
+                onChange={(e) =>
+                  setMemberInfo({ ...memberInfo, description: e.target.value })
+                }
+                value={memberInfo.description}
+                type="text"
+                name="name"
+                id="name"
+                class="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                placeholder="https://freeimage.host/i/KWP9PZg"
                 required=""
               />
             </div>
@@ -265,21 +284,18 @@ export default function AddMember({setAllMembers}) {
                 placeholder="401, Merumount Plaza, Raspan Cross Rd ......."
               ></textarea>
             </div>
-            
           </div>
         </form>
       </Modal>
 
+      {notification && notification.state && (
+        <Notification
+          notification={notification}
+          setNotification={setNotification}
+        />
+      )}
 
-      {notification && notification.state &&
-
-        <Notification notification={notification} setNotification={setNotification}/>
-      }
-
-      <ErrorModal showError={showError} setShowError={setShowError}/>  
-
-
-      
+      <ErrorModal showError={showError} setShowError={setShowError} />
     </div>
   );
 }
