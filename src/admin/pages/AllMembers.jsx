@@ -483,15 +483,15 @@ const AllMembers = () => {
   };
 
   return (
-    <div className="flex flex-col w-full h-full text-white bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 shadow-2xl rounded-2xl overflow-hidden border border-neutral-700/50">
+    <div className="flex flex-col w-full h-full text-black bg-white shadow-2xl rounded-2xl overflow-hidden border border-neutral-700/50">
       {/* Enhanced Header Section with Gradient Overlay */}
-      <div className="relative bg-gradient-to-r from-neutral-800/90 to-neutral-900/90 backdrop-blur-sm border-b border-neutral-700/50">
+      <div className="relative bg-white   backdrop-blur-sm border-b border-neutral-700/50">
         <div className="mx-3 sm:mx-4 lg:mx-6 mt-3 sm:mt-4 lg:mt-6 mb-3 sm:mb-4 lg:mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 lg:gap-6 mb-3 sm:mb-4 lg:mb-6">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                <div className="w-1 h-6 sm:h-8 bg-gradient-to-b from-lime-400 to-lime-600 rounded-full"></div>
-                <h5 className="font-sans text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white">
+                <div className="w-1 h-6 sm:h-8 bg-black"></div>
+                <h5 className="font-sans text-lg sm:text-xl lg:text-2xl font-bold tracking-tight ">
                   Members Directory
                 </h5>
               </div>
@@ -514,7 +514,7 @@ const AllMembers = () => {
                 <div className="absolute  inset-y-0 right-3 sm:right-4 z-1 flex items-center ">
                   <button onClick={handleSearch}>
                     <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 fill-white "
+                      className="w-4 h-4 sm:w-5 sm:h-5  "
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="currentColor"
@@ -524,7 +524,7 @@ const AllMembers = () => {
                   </button>
                 </div>
                 <input
-                  className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border-2 border-neutral-700/50 focus:border-lime-300 outline-none bg-neutral-900/60 backdrop-blur-sm pr-10 sm:pr-12 pl-3 sm:pl-4 font-sans text-xs sm:text-sm font-normal text-white placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
+                  className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border-2 border-neutral-700/50 focus:border-lime-300 outline-none  backdrop-blur-sm pr-10 sm:pr-12 pl-3 sm:pl-4 font-sans text-xs sm:text-sm font-normal  placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -600,21 +600,21 @@ const AllMembers = () => {
               {/* Stylish Tabs */}
               <div className="flex-shrink-0">
                 <nav className="inline-flex">
-                  <ul className="relative flex flex-row p-1.5 rounded-xl bg-neutral-900/80 backdrop-blur-sm border-2 border-neutral-700/50 shadow-lg">
+                  <ul className="relative flex flex-row p-1.5 rounded-xl  backdrop-blur-sm border-2 border-neutral-700/50 shadow-lg">
                     {["all", "active", "expired"].map((tab) => (
                       <li
                         key={tab}
                         role="tab"
                         className={`relative flex items-center justify-center h-full px-6 lg:px-8 py-2.5 font-sans text-sm font-medium tracking-wide cursor-pointer select-none transition-all duration-300 rounded-lg ${
                           activeTab === tab
-                            ? "text-black"
+                            ? "text-white"
                             : "text-gray-400 hover:text-gray-200"
                         }`}
                         onClick={() => setActiveTab(tab)}
                       >
                         <div className="relative z-10 capitalize">{tab}</div>
                         {activeTab === tab && (
-                          <div className="absolute inset-0 h-full bg-gradient-to-r from-lime-200 to-lime-300 rounded-lg shadow-lg transition-all duration-300"></div>
+                          <div className="absolute inset-0 h-full bg-black  rounded-lg shadow-lg transition-all duration-300"></div>
                         )}
                       </li>
                     ))}
@@ -627,10 +627,10 @@ const AllMembers = () => {
       </div>
 
       {/* Content Section with Better Spacing */}
-      <div className="flex-1 overflow-hidden bg-neutral-900/30">
+      <div className="flex-1 overflow-hidden bg-white">
         {/* Desktop/Tablet Table View - Enhanced */}
         <div className="hidden lg:block h-full overflow-auto px-6 lg:px-8 py-6">
-          <div className="bg-neutral-900/60 backdrop-blur-sm rounded-xl border border-neutral-700/50 overflow-hidden shadow-xl">
+          <div className=" backdrop-blur-sm rounded-xl border border-neutral-700/50 overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left table-auto">
                 <thead className="sticky top-0 z-10">
@@ -688,21 +688,21 @@ const AllMembers = () => {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-neutral-700/30">
+                <tbody className="divide-y ">
                   {memberToDisplay.map((member) => (
                     <tr
                       key={member.id}
                       className="group hover:bg-neutral-800/40 transition-all duration-200"
                     >
                       <td className="px-5 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-neutral-200/10 text-white border border-gray-500/20">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold  text-black border border-gray-500/20">
                           {member.idNo || "N/A"}
                         </span>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex flex-col min-w-0">
-                            <p className="font-sans text-sm font-semibold text-white truncate">
+                            <p className="font-sans text-sm font-semibold  truncate">
                               {member.name || "N/A"}
                             </p>
                             <p className="font-sans text-xs text-gray-400 truncate">
@@ -713,7 +713,7 @@ const AllMembers = () => {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-col">
-                          <p className="font-sans text-sm font-medium text-white">
+                          <p className="font-sans text-sm font-medium ">
                             {member.gender || "N/A"}
                           </p>
                           <p className="font-sans text-xs text-gray-400 line-clamp-1">
@@ -722,7 +722,7 @@ const AllMembers = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50 text-gray-200 border border-neutral-600">
+                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50  border border-neutral-600">
                           {member.memberships && member.memberships.length > 0
                             ? member.memberships[member.memberships.length - 1]
                                 .reserved
@@ -730,7 +730,7 @@ const AllMembers = () => {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-sm text-gray-300 font-medium">
+                        <p className="text-sm  font-medium">
                           {member.memberships && member.memberships.length > 0
                             ? member.memberships[member.memberships.length - 1]
                                 .dueDate
@@ -739,7 +739,7 @@ const AllMembers = () => {
                       </td>
 
                       <td className="px-5 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50 text-gray-200 border border-neutral-600">
+                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50  border border-neutral-600">
                           {calculateDaysLeft(
                             member.memberships && member.memberships.length > 0
                               ? member.memberships[
@@ -758,7 +758,7 @@ const AllMembers = () => {
                       <td className="px-5 py-4">
                         <button
                           onClick={() => updateCode(member)}
-                          className="hover:cursor-pointer inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50 text-gray-200 border border-neutral-600"
+                          className="hover:cursor-pointer inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50  border border-neutral-600"
                         >
                           {member.code ? member.code : "N/A"}
                         </button>
@@ -767,14 +767,14 @@ const AllMembers = () => {
                       <td className="px-5 py-4">
                         <button
                           onClick={() => updateLoginStatus(member)}
-                          className="hover:cursor-pointer inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50 text-gray-200 border border-neutral-600"
+                          className="hover:cursor-pointer inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-neutral-700/50  border border-neutral-600"
                         >
                           {member.loginStatus ? "Logged In" : "Logged Out"}
                         </button>
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="text-sm text-gray-300 line-clamp-2 max-w-xs">
+                        <p className="text-sm  line-clamp-2 max-w-xs">
                           {member.address || "N/A"}
                         </p>
                       </td>

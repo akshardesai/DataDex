@@ -159,7 +159,7 @@ export default function AddMember({setAllMembers}) {
                 type="text"
                 name="name"
                 id="name"
-                class="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                class="bg-neutral-700 outline-none border-2 border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder="Kabir"
                 required=""
               />
@@ -179,7 +179,7 @@ export default function AddMember({setAllMembers}) {
                 type="text"
                 name="name"
                 id="name"
-                class="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                class="bg-neutral-700 outline-none border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder="3138"
                 required=""
               />
@@ -199,7 +199,7 @@ export default function AddMember({setAllMembers}) {
                 type="number"
                 name="price"
                 id="price"
-                class="bg-neutral-800 outline-none  border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                class="bg-neutral-700 outline-none  border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder=" 6355779790"
                 required=""
               />
@@ -217,7 +217,7 @@ export default function AddMember({setAllMembers}) {
                   setMemberInfo({ ...memberInfo, gender: e.target.value })
                 }
                 id="category"
-                class="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                class="bg-neutral-700 border outline-none border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -240,7 +240,7 @@ export default function AddMember({setAllMembers}) {
                 type="text"
                 name="name"
                 id="name"
-                class="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                class="bg-neutral-700 outline-none border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder="Exam preparation?"
                 required=""
               />
@@ -260,7 +260,7 @@ export default function AddMember({setAllMembers}) {
                 type="text"
                 name="name"
                 id="name"
-                class="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                class="bg-neutral-700 outline-none border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder="https://freeimage.host/i/KWP9PZg"
                 required=""
               />
@@ -280,7 +280,7 @@ export default function AddMember({setAllMembers}) {
                 value={memberInfo.address}
                 id="description"
                 rows="4"
-                class="mt-1 block p-2.5 w-full text-sm text-white bg-neutral-800 rounded-lg border border-gray-600 outline-none"
+                class="mt-1 block p-2.5 w-full text-sm text-white bg-neutral-700 rounded-lg border border-neutral-800 outline-none"
                 placeholder="401, Merumount Plaza, Raspan Cross Rd ......."
               ></textarea>
             </div>
