@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { LogInDB } from "../../utils/Members";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 
 const SignInModal = ({ isOpen, onClose }) => {
   const [code, setCode] = useState("");
@@ -35,7 +36,7 @@ const SignInModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop with blur effect */}
       <div
@@ -105,7 +106,8 @@ const SignInModal = ({ isOpen, onClose }) => {
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.getElementById("portal")
   );
 };
 

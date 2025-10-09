@@ -34,7 +34,7 @@ const Layout = () => {
               className={({ isActive }) =>
                 `${
                   isActive
-                    ? "bg-white text-black "
+                    ? "bg-lime-300 text-black "
                     : "text-gray-400 hover:text-black hover:bg-lime-300"
                 } w-8 h-8 flex justify-center items-center rounded-lg`
               }

@@ -4,59 +4,58 @@ import Modal from "../Modal";
 import Notification from "../Notification";
 import ErrorModal from "../ErrorModal";
 
-export default function DeleteMemberShip({ info, member, setMember,setAllMembers }) {
+export default function DeleteMemberShip({ info, member, setMember, setAllMembers, source }) {
   const [isOpen, setIsOpen] = useState(false);
-       const [notification, setNotification] = useState({
-            state:false,
-            message:""
-          });
-           const [showError,setShowError]=useState({
-            state:false,
-            message:""
-           })
-
-
+  const [notification, setNotification] = useState({
+    state: false,
+    message: "",
+  });
+  const [showError, setShowError] = useState({
+    state: false,
+    message: "",
+  });
 
   async function deleteMembershipSubmit() {
     const response = await deleteMembershipDB(member.id, info);
-    
-     
-
-          
 
     if (response.success) {
-      
-      setAllMembers((prevMembers)=>{
-        const updatedMembers = prevMembers.map((m)=>{
-          if (m.id===member.id) {
-            return{...m,memberships:m.memberships.filter((membership)=>membership.id!==info.id)}
-          }
-          return m
-        })
+      if (source==="search") {
+        setAllMembers((prevMembers) => {
+          const updatedMembers = prevMembers.map((m) => {
+            if (m.id === member.id) {
+              return {
+                ...m,
+                memberships: m.memberships.filter(
+                  (membership) => membership.id !== info.id
+                ),
+              };
+            }
+            return m;
+          });
 
-        return updatedMembers
-      })
+          return updatedMembers;
+        });
+      }
 
       setMember((prevMember) => {
         const updatedMemberships = prevMember.memberships.filter(
           (membership) => membership.id !== info.id
         );
 
-
         return { ...prevMember, memberships: updatedMemberships };
       });
 
       setNotification({
-        state:true,
-        message:"Membership Deleted"
-      },[])
-
-      setIsOpen(false);
+        state: true,
+        message: "Membership Deleted",
+      });
+      console.log('deleted');
+      
+      // setIsOpen(false);
     } else {
-      setShowError({state:true,message:response.error})
+      setShowError({ state: true, message: response.error });
     }
-  } 
-
+  }
 
   return (
     <>
@@ -105,7 +104,7 @@ export default function DeleteMemberShip({ info, member, setMember,setAllMembers
             <button
               onClick={(e) => deleteMembershipSubmit(e)}
               type="submit"
-              className=" -mt-2 text-black flex  items-center bg-red-500 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-lime-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              className=" -mt-2 text-black flex  items-center bg-red-500 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-400 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Delete
             </button>
@@ -121,20 +120,20 @@ export default function DeleteMemberShip({ info, member, setMember,setAllMembers
       >
         <div className="mb-4 p-4">
           <p className="text-white">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dicta,
-            aperiam!
+            Delete Membership Permanently ? Are you sure.. This action cannot be
+            undone
           </p>
         </div>
       </Modal>
 
-              {notification && notification.state &&
-                  
-                          <Notification notification={notification} setNotification={setNotification}/>
-                        }
-                  
-                        <ErrorModal showError={showError} setShowError={setShowError}/> 
+      {notification && notification.state && (
+        <Notification
+          notification={notification}
+          setNotification={setNotification}
+        />
+      )}
 
-                        
+      <ErrorModal showError={showError} setShowError={setShowError} />
     </>
   );
 }

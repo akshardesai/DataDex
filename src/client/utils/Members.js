@@ -1,85 +1,170 @@
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { db } from "../../commonUtils/firebase";
 
-import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore"
-import { db } from "../../commonUtils/firebase"
+import CryptoJS from "crypto-js";
 
-import CryptoJS from "crypto-js"
+//firestore document ref
+const membersCollectionRef = collection(db, "members");
 
+//localstorage key
+const localKey = import.meta.env.VITE_LOCAL_KEY;
 
-const membersCollectionRef = collection(db, "members")
-const localKey = import.meta.env.VITE_LOCAL_KEY
-const adminKey = import.meta.env.VITE_ADMIN_KEY
+//admin login key very dumb
+const adminKey = import.meta.env.VITE_ADMIN_KEY;
 
-export async function LogInDB(code){
-        
-    try {
+// library lat and lng 23.050344791491824, 72.67361176729297
 
+//domninos 23.044845174361086, 72.66932530896422
+// Library location
+const LIBRARY_LAT = 23.044845174361086;
+const LIBRARY_LNG = 72.66932530896422;
 
-        if (code===adminKey) {
-            return {success:true,data:"admin"}
-        }
+// Allowed distance (in meters)
+const ALLOWED_RADIUS = 705555;
 
-        
-        const q = query(membersCollectionRef, where("code", "==", code));
-        const querySnapshot = await getDocs(q);
+function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // Earth radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-        const memberDoc = querySnapshot.docs.at(0);
-        if (!memberDoc) {
-          return { sucess: false, error: "Invalid code no member found" };
-        }
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 
-        const memberRef = doc(membersCollectionRef, memberDoc.id);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        await updateDoc(memberRef, {
-          code: "",
-          loginStatus: true,
-        });
-
-      const memberData = { id: memberDoc.id, ...memberDoc.data() };
-      
-
-      const existingMember = localStorage.getItem("member")
-      if (existingMember) {
-          localStorage.removeItem("member")
-      }
-
-      const encryptedData = CryptoJS.AES.encrypt(
-        JSON.stringify(memberData),
-        localKey
-
-      ).toString()
-
-      localStorage.setItem("member",encryptedData)
-
-        return { success: true, data: memberData };
-        
-        
-
-
-
-    } catch (error) {
-        return { success: false, error:`failed to query the code ${error}`}
-    }   
+  return R * c; // Distance in meters
 }
 
-export async function readMemberDetails(){
-    try {
-      const encrypted = localStorage.getItem("member")
-      
-      if (!encrypted) {
-        return {sucess:false,error:`Error No Member Found In Storage`}
-      }
-
-      const bytes = CryptoJS.AES.decrypt(encrypted, localKey);
-      const decrypted = bytes.toString(CryptoJS.enc.Utf8)
-
-      if (!decrypted) {
-          return {success:false,error:`Failed to decrypt member data`}
-      }
-
-      const member = JSON.parse(decrypted)
-
-      return {success:true,data:member}
-    } catch (error) {
-        return {success:false,error:`Failed to read member ${error}`}
+export async function validateUserLocation() {
+  try {
+    if (!navigator.geolocation) {
+      return {
+        success: false,
+        error: `Geolocation not supported by your browser`,
+      };
     }
+
+    const position = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject)
+    );
+
+    const userlat = position.coords.latitude;
+    const userLng = position.coords.longitude;
+
+    const distance = getDistanceFromLatLonInMeters(
+      userlat,
+      userLng,
+      LIBRARY_LAT,
+      LIBRARY_LNG
+    );
+
+    console.log('distance',distance);
+    console.log('allowed radius', ALLOWED_RADIUS);
+    console.log("User location:", userlat, userLng);
+    console.log("Library location:", LIBRARY_LAT, LIBRARY_LNG);
+    
+    if (distance > ALLOWED_RADIUS) {
+      return {
+        success: false,
+        error: `Access denied`,
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to get location: ${error.message}`,
+    };
+  }
+}
+
+export async function LogInDB(code) {
+  try {
+    if (code === adminKey) {
+      return { success: true, data: "admin" };
+    }
+
+    const locationCheck = await validateUserLocation();
+
+    if (!locationCheck.success) {
+      return { success: false, error: locationCheck.error };
+    }
+
+    const q = query(membersCollectionRef, where("code", "==", code));
+    const querySnapshot = await getDocs(q);
+
+    const memberDoc = querySnapshot.docs.at(0);
+    if (!memberDoc) {
+      return { sucess: false, error: "Invalid code no member found" };
+    }
+
+    if (memberDoc.data().loginStatus) {
+      return {success:false,error:`Already logged in other device`}
+    }
+    
+
+
+
+    const memberRef = doc(membersCollectionRef, memberDoc.id);
+
+ 
+    
+
+    await updateDoc(memberRef, {
+      code: "",
+      loginStatus: true,
+    });
+
+    const memberData = { id: memberDoc.id, ...memberDoc.data() };
+
+    const existingMember = localStorage.getItem("member");
+    if (existingMember) {
+      localStorage.removeItem("member");
+    }
+
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(memberData),
+      localKey
+    ).toString();
+
+    localStorage.setItem("member", encryptedData);
+
+    return { success: true, data: memberData };
+  } catch (error) {
+    return { success: false, error: `failed to query the code ${error}` };
+  }
+}
+
+export async function readMemberDetails() {
+  try {
+    const encrypted = localStorage.getItem("member");
+
+    if (!encrypted) {
+      return { sucess: false, error: `Error No Member Found In Storage` };
+    }
+
+    const bytes = CryptoJS.AES.decrypt(encrypted, localKey);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+
+    if (!decrypted) {
+      return { success: false, error: `Failed to decrypt member data` };
+    }
+
+    const member = JSON.parse(decrypted);
+
+    return { success: true, data: member };
+  } catch (error) {
+    return { success: false, error: `Failed to read member ${error}` };
+  }
 }

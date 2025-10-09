@@ -9,6 +9,7 @@ export default function MemberDetails({
   setIsOpen,
   memberDetails,
   setAllMembers,
+  source,
 }) {
   const [member, setMember] = useState(memberDetails);
 
@@ -18,8 +19,6 @@ export default function MemberDetails({
     } else {
       document.body.style.overflow = "unset";
     }
-
- 
 
     return () => {
       document.body.style.overflow = "unset";
@@ -46,7 +45,7 @@ export default function MemberDetails({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity duration-300 ease-in-out z-[9998]"
+        className="fixed inset-0 bg-white/20 backdrop-blur-[3px] transition-opacity duration-300 ease-in-out z-[9998]"
         style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
         onClick={() => setIsOpen(false)}
       ></div>
@@ -60,10 +59,10 @@ export default function MemberDetails({
           {/* Close Button */}
           <button
             onClick={() => setIsOpen(false)}
-            className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 transition-colors shadow-lg"
+            className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10 w-5 h-5 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 transition-colors shadow-lg"
           >
             <svg
-              className="w-5 h-5 sm:w-6 sm:h-6 text-white"
+              className="w-4 h-4 sm:w-6 sm:h-6 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -145,6 +144,7 @@ export default function MemberDetails({
                 member={member}
                 setMember={setMember}
                 setAllMembers={setAllMembers}
+                source={source}
               />
             </div>
           </div>
@@ -221,12 +221,14 @@ export default function MemberDetails({
                           member={member}
                           setMember={setMember}
                           setAllMembers={setAllMembers}
+                          source={source}
                         />
                         <DeleteMemberShip
                           info={info}
                           member={member}
                           setMember={setMember}
                           setAllMembers={setAllMembers}
+                          source={source}
                         />
                       </div>
                     </div>

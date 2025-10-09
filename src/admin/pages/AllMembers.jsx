@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import AddMember from "../components/allMembers/AddMember";
 import {
@@ -6,6 +6,7 @@ import {
   doc,
   getDocs,
   limit,
+  onSnapshot,
   orderBy,
   query,
   startAfter,
@@ -21,6 +22,7 @@ import {
 } from "../utils/AllMembers";
 import DetailedMember from "../components/allMembers/DetailedMember";
 import Notification from "../components/Notification";
+import ImageBtn from "../components/allMembers/ImageBtn";
 
 const MEMBERS_PER_PAGE = 6;
 
@@ -41,11 +43,13 @@ const AllMembers = () => {
   const [searchedMembers, setSearchedMembers] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  const unsubscribes = useRef([]);
+
   const memberToDisplay = isSearching ? searchedMembers : allMembers;
   const membersCollectionRef = collection(db, "members");
 
   //function the fetch the first page of members
-  const fetchInitialMembers = async () => {
+  const fetchInitialMembers = () => {
     setNotification({ state: true, message: "Loading members...." });
     try {
       const q = query(
@@ -53,91 +57,139 @@ const AllMembers = () => {
         orderBy("createdAt", "desc"),
         limit(MEMBERS_PER_PAGE)
       );
-      const documentSnapshots = await getDocs(q);
 
-      const members = documentSnapshots.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      // [FIXED] - The function returned from onSnapshot is now stored in a unique variable name.
+      const listener = onSnapshot(
+        q,
+        (documentSnapshots) => {
+          const members = documentSnapshots.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setAllMembers(members);
+          const lastDoc =
+            documentSnapshots.docs[documentSnapshots.docs.length - 1];
+          setLastVisible(lastDoc);
 
-      setAllMembers(members);
+          if (members.length < MEMBERS_PER_PAGE) {
+            setHasMore(false);
+          }
 
-      //save the last document as the pointer for the nex fetch
+          setNotification({ state: false, message: "" });
+        },
+        (error) => {
+          alert(`Error fetching real-time member: ${error}`);
+          setNotification({ state: false, message: "" });
+        }
+      );
 
-      const lastDoc = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-      setLastVisible(lastDoc);
-
-      //if we fetched fewer members than our page limit, there are no more to load
-      if (members.length < MEMBERS_PER_PAGE) {
-        setHasMore(false);
-      }
+      // [FIXED] - We are now pushing to the correct ref's .current property.
+      unsubscribes.current.push(listener);
     } catch (error) {
-      alert("error fetching initial members", error.message);
-    } finally {
+      alert(`error fetching initial members ${error}`);
       setNotification({ state: false, message: "" });
     }
   };
 
   //function to fetch next page / more members
 
-  const handleLoadMore = async () => {
-    // Determine which "last visible" document to use as the pagination cursor
+  const handleLoadMore = () => {
     const lastDocToStartAfter = isSearching ? lastSearchVisible : lastVisible;
 
     if (!lastDocToStartAfter || !hasMore) return;
 
-    setNotification({ state: true, message: "Loading more members....." });
+    if (isSearching) {
+      const loadMoreSearch = async () => {
+        setNotification({ state: true, message: "loading more members..." });
+
+        try {
+          const q = query(
+            membersCollectionRef,
+            where("keywords", "array-contains", searchQuery.toLowerCase()),
+            orderBy("createdAt", "desc"),
+            limit(MEMBERS_PER_PAGE),
+            startAfter(lastDocToStartAfter)
+          );
+
+          const documentSnapshots = await getDocs(q);
+          const newMembers = documentSnapshots.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          // [FIXED] - Corrected the off-by-one error to get the last document properly.
+          const lastDoc =
+            documentSnapshots.docs[documentSnapshots.docs.length - 1];
+
+          setSearchedMembers((prevMembers) => [...prevMembers, ...newMembers]);
+          setLastSearchVisible(lastDoc);
+          if (newMembers.length < MEMBERS_PER_PAGE) {
+            setHasMore(false);
+          }
+        } catch (error) {
+          alert(`error fetching more members ${error}`);
+        } finally {
+          setNotification({ state: false, message: "" });
+        }
+      };
+
+      // [FIXED] - The loadMoreSearch function is now actually called.
+      loadMoreSearch();
+      // [FIXED] - Return here to prevent the real-time logic from running for search results.
+      return;
+    }
+
+    setNotification({ state: true, message: "Loading more members..." });
+
     try {
-      let q; // Query will be defined based on whether we are searching
+      const q = query(
+        membersCollectionRef,
+        orderBy("createdAt", "desc"),
+        limit(MEMBERS_PER_PAGE),
+        startAfter(lastDocToStartAfter)
+      );
 
-      if (isSearching) {
-        // Build the query for loading more SEARCH results
-        q = query(
-          membersCollectionRef,
-          where("keywords", "array-contains", searchQuery.toLowerCase()),
-          orderBy("createdAt", "desc"),
-          limit(MEMBERS_PER_PAGE),
-          startAfter(lastDocToStartAfter) // Use the search cursor
-        );
-      } else {
-        // Build the query for loading more ALL members (your original logic)
-        q = query(
-          membersCollectionRef,
-          orderBy("createdAt", "desc"),
-          limit(MEMBERS_PER_PAGE),
-          startAfter(lastDocToStartAfter) // Use the main list cursor
-        );
-      }
+      // [FIXED] - Renamed the local variable to avoid shadowing.
+      const listener = onSnapshot(
+        q,
+        (documentSnapshots) => {
+          const newMembers = documentSnapshots.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
 
-      const documentSnapshots = await getDocs(q);
-      const newMembers = documentSnapshots.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+          setAllMembers((prevMembers) => {
+            const existingIds = new Set(prevMembers.map((m) => m.id));
+            const filteredNewMembers = newMembers.filter(
+              (m) => !existingIds.has(m.id)
+            );
+            return [...prevMembers, ...filteredNewMembers];
+          });
 
-      const lastDoc = documentSnapshots.docs[documentSnapshots.docs.length - 1];
+          const lastDoc =
+            documentSnapshots.docs[documentSnapshots.docs.length - 1];
+          setLastVisible(lastDoc);
 
-      if (isSearching) {
-        // Add new members to the SEARCH list and update the SEARCH cursor
-        setSearchedMembers((prevMembers) => [...prevMembers, ...newMembers]);
-        setLastSearchVisible(lastDoc);
-      } else {
-        // Add new members to the MAIN list and update the MAIN cursor
-        setAllMembers((prevMembers) => [...prevMembers, ...newMembers]);
-        setLastVisible(lastDoc);
-      }
-
-      if (newMembers.length < MEMBERS_PER_PAGE) {
-        setHasMore(false);
-      }
+          if (newMembers.length < MEMBERS_PER_PAGE) {
+            setHasMore(false);
+          }
+          setNotification({ state: false, message: "" });
+        },
+        (error) => {
+          alert(`error fetching more real-time members ${error}`);
+          setNotification({ state: false, message: "" });
+        }
+      );
+      // [FIXED] - Pushing the correct variable to the correct ref.
+      unsubscribes.current.push(listener);
     } catch (error) {
-      alert("error fetching more members", error.message);
-    } finally {
+      alert(`error setting up more members listener error`);
       setNotification({ state: false, message: "" });
     }
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (e) => {
+    e.preventDefault();
     if (searchQuery.trim() === "") {
       setIsSearching(false);
       return;
@@ -213,6 +265,11 @@ const AllMembers = () => {
     fetchInitialMembers();
     console.log("<=========render fired==========>");
     // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    return () => {
+      console.log("cleaning up listeners...");
+      unsubscribes.current.forEach((unsubscribeFunc) => unsubscribeFunc());
+    };
   }, []);
 
   // Add this useEffect to your component
@@ -286,7 +343,7 @@ const AllMembers = () => {
                 {statusText}
               </span>
               <svg
-                className={`w-4 h-4 text-lime-400 transition-transform duration-300 ${
+                className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${
                   isExpanded ? "rotate-180" : ""
                 }`}
                 fill="none"
@@ -418,6 +475,50 @@ const AllMembers = () => {
               </div>
             </div>
 
+            {/* Member Control Grid - 2 Columns */}
+            <div className="grid grid-cols-2 gap-1.5">
+              {/* Code */}
+              <button
+                onClick={() => updateCode(member)}
+                className="flex items-center gap-1.5 bg-neutral-800/50 rounded p-1.5"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-3 h-3 text-gray-400 flex-shrink-0"
+                >
+                  <path d="M20 10H4V19H20V10ZM3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3ZM5 6V8H7V6H5ZM9 6V8H11V6H9ZM5 11H8V16H5V11Z"></path>
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] text-gray-500">Code</p>
+                  <p className="text-[10px] font-medium text-white truncate">
+                    {member.code || "N/A"}
+                  </p>
+                </div>
+              </button>
+              {/* LoginStatus */}
+              <button
+                onClick={() => updateLoginStatus(member)}
+                className="flex items-center gap-1.5 bg-neutral-800/50 rounded p-1.5 "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-3 h-3 text-gray-400 flex-shrink-0"
+                >
+                  <path d="M4 15H6V20H18V4H6V9H4V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V15ZM10 11V8L15 12L10 16V13H2V11H10Z"></path>
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] text-gray-500">Login Status</p>
+                  <p className="text-[10px] font-medium text-white truncate">
+                    {member.loginStatus ? "Logged In" : "Logged Out"}
+                  </p>
+                </div>
+              </button>
+            </div>
+
             {/* Description - Full Width */}
             <div className="flex items-start gap-1.5 bg-neutral-800/50 rounded p-1.5">
               <svg
@@ -471,10 +572,14 @@ const AllMembers = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-1.5 pt-1">
+            <div className="flex items-center justify-between gap-1.5 pt-1">
+              <div className="flex items-center gap-1.5 pt-1">
+
               <DetailedMember member={member} setAllMembers={setAllMembers} />
               <EditMember member={member} setAllMembers={setAllMembers} />
               <DeleteMember member={member} setAllMembers={setAllMembers} />
+              </div>
+              <ImageBtn member={member} />
             </div>
           </div>
         </div>
@@ -483,14 +588,14 @@ const AllMembers = () => {
   };
 
   return (
-    <div className="flex flex-col w-full h-full text-black bg-white shadow-2xl rounded-2xl overflow-hidden border border-neutral-700/50">
+    <div className="flex flex-col w-full h-full text-white shadow-2xl rounded-2xl overflow-hidden border border-neutral-700/50">
       {/* Enhanced Header Section with Gradient Overlay */}
-      <div className="relative bg-white   backdrop-blur-sm border-b border-neutral-700/50">
+      <div className="relative bg-gradient-to-r from-neutral-800/90 to-neutral-900/90 backdrop-blur-sm   backdrop-blur-sm border-b border-neutral-700/50">
         <div className="mx-3 sm:mx-4 lg:mx-6 mt-3 sm:mt-4 lg:mt-6 mb-3 sm:mb-4 lg:mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 lg:gap-6 mb-3 sm:mb-4 lg:mb-6">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                <div className="w-1 h-6 sm:h-8 bg-black"></div>
+                <div className="bg-gradient-to-b from-lime-400 to-lime-600 w-1 h-6 sm:h-8 bg-black"></div>
                 <h5 className="font-sans text-lg sm:text-xl lg:text-2xl font-bold tracking-tight ">
                   Members Directory
                 </h5>
@@ -511,24 +616,27 @@ const AllMembers = () => {
             {/* Search Bar - Always Visible */}
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="relative flex-1 lg:flex-none lg:w-79">
-                <div className="absolute  inset-y-0 right-3 sm:right-4 z-1 flex items-center ">
-                  <button onClick={handleSearch}>
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5  "
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M11 2C15.968 2 20 6.032 20 11C20 15.968 15.968 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2ZM11 18C14.8675 18 18 14.8675 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18ZM19.4853 18.0711L22.3137 20.8995L20.8995 22.3137L18.0711 19.4853L19.4853 18.0711Z"></path>
-                    </svg>
-                  </button>
-                </div>
-                <input
-                  className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border-2 border-neutral-700/50 focus:border-lime-300 outline-none  backdrop-blur-sm pr-10 sm:pr-12 pl-3 sm:pl-4 font-sans text-xs sm:text-sm font-normal  placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                <form onSubmit={(e) => handleSearch(e)}>
+                  <div className="absolute  inset-y-0 right-3 sm:right-4 z-1 flex items-center ">
+                    <button type="submit" onClick={handleSearch}>
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5  "
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M11 2C15.968 2 20 6.032 20 11C20 15.968 15.968 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2ZM11 18C14.8675 18 18 14.8675 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18ZM19.4853 18.0711L22.3137 20.8995L20.8995 22.3137L18.0711 19.4853L19.4853 18.0711Z"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <input
+                    className="w-full h-10 sm:h-11 lg:h-12 rounded-lg sm:rounded-xl border-2 border-neutral-700/50 focus:border-lime-300 outline-none bg-neutral-900/60   backdrop-blur-sm pr-10 sm:pr-12 pl-3 sm:pl-4 font-sans text-xs sm:text-sm font-normal  placeholder-gray-500 transition-all duration-300 shadow-lg focus:shadow-lime-500/20"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </form>
               </div>
 
               {/* Mobile: Dropdown Toggle Button */}
@@ -567,7 +675,7 @@ const AllMembers = () => {
               {/* Tabs */}
               <div className="flex-shrink-0">
                 <nav className="inline-flex w-full">
-                  <ul className="relative flex flex-row w-full p-1.5 rounded-xl bg-neutral-900/80 backdrop-blur-sm border border-neutral-700/50 shadow-lg">
+                  <ul className="relative flex flex-row w-full p-1.5 rounded-xl bg-[#1C1C1C] backdrop-blur-sm border border-neutral-700/50 shadow-lg">
                     {["all", "active", "expired"].map((tab) => (
                       <li
                         key={tab}
@@ -600,21 +708,21 @@ const AllMembers = () => {
               {/* Stylish Tabs */}
               <div className="flex-shrink-0">
                 <nav className="inline-flex">
-                  <ul className="relative flex flex-row p-1.5 rounded-xl  backdrop-blur-sm border-2 border-neutral-700/50 shadow-lg">
+                  <ul className="relative flex flex-row p-1.5 rounded-xl bg-[#1C1C1C]  backdrop-blur-sm border-2 border-neutral-700/50 shadow-lg">
                     {["all", "active", "expired"].map((tab) => (
                       <li
                         key={tab}
                         role="tab"
                         className={`relative flex items-center justify-center h-full px-6 lg:px-8 py-2.5 font-sans text-sm font-medium tracking-wide cursor-pointer select-none transition-all duration-300 rounded-lg ${
                           activeTab === tab
-                            ? "text-white"
+                            ? "text-black"
                             : "text-gray-400 hover:text-gray-200"
                         }`}
                         onClick={() => setActiveTab(tab)}
                       >
                         <div className="relative z-10 capitalize">{tab}</div>
                         {activeTab === tab && (
-                          <div className="absolute inset-0 h-full bg-black  rounded-lg shadow-lg transition-all duration-300"></div>
+                          <div className="absolute inset-0 h-full bg-gradient-to-r from-lime-200 to-lime-300  rounded-lg shadow-lg transition-all duration-300"></div>
                         )}
                       </li>
                     ))}
@@ -627,14 +735,14 @@ const AllMembers = () => {
       </div>
 
       {/* Content Section with Better Spacing */}
-      <div className="flex-1 overflow-hidden bg-white">
+      <div className="flex-1 overflow-hidden bg-[#1c1c1c]">
         {/* Desktop/Tablet Table View - Enhanced */}
         <div className="hidden lg:block h-full overflow-auto px-6 lg:px-8 py-6">
-          <div className=" backdrop-blur-sm rounded-xl border border-neutral-700/50 overflow-hidden shadow-xl">
+          <div className=" bg-neutral-[#1A1A1A] backdrop-blur-sm rounded-xl border border-neutral-700/50 overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left table-auto">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-gradient-to-r from-neutral-800 to-neutral-900 border-b-2 border-lime-200/30">
+                  <tr className="bg-gradient-to-r from-neutral-800 to-neutral-700 border-b-2 border-lime-200/30">
                     <th className="px-5 py-4">
                       <p className="font-sans text-xs font-bold uppercase tracking-wider text-gray-300">
                         ID
@@ -688,14 +796,14 @@ const AllMembers = () => {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y ">
+                <tbody className="divide-y   ">
                   {memberToDisplay.map((member) => (
                     <tr
                       key={member.id}
-                      className="group hover:bg-neutral-800/40 transition-all duration-200"
+                      className="group bg-[#1A1A1A] border-b border-neutral-700  hover:bg-neutral-800/40 transition-all duration-200"
                     >
                       <td className="px-5 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold  text-black border border-gray-500/20">
+                        <span className="inline-flex items-center bg-neutral-700/50  border border-neutral-600 px-3 py-1 rounded-full text-xs font-semibold  text-white">
                           {member.idNo || "N/A"}
                         </span>
                       </td>
@@ -780,19 +888,27 @@ const AllMembers = () => {
                       </td>
 
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center  gap-2">
                           <DetailedMember
                             member={member}
-                            setAllMembers={setAllMembers}
+                            setAllMembers={
+                              isSearching ? setSearchedMembers : setAllMembers
+                            }
+                            source={isSearching ? "search" : null}
                           />
                           <EditMember
                             member={member}
-                            setAllMembers={setAllMembers}
+                            setAllMembers={
+                              isSearching ? setSearchedMembers : null
+                            }
                           />
                           <DeleteMember
                             member={member}
-                            setAllMembers={setAllMembers}
+                            setAllMembers={
+                              isSearching ? setSearchedMembers : null
+                            }
                           />
+                          <ImageBtn member={member} />
                         </div>
                       </td>
                     </tr>

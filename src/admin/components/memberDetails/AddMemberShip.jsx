@@ -4,7 +4,7 @@ import { addMembershipDB } from "../../utils/AllMembers";
 import Notification from "../Notification";
 import ErrorModal from "../ErrorModal";
 
-export default function AddMemberShip({id,member,setMember,setAllMembers}) {
+export default function AddMemberShip({id,member,setMember,setAllMembers,source}) {
   
   
   const today = new Date();
@@ -83,20 +83,21 @@ useEffect(() => {
 
     if (response.success) {
 
+        if (source==="search") {
+                  setAllMembers((prevMembers) => {
+                    const updatedMembers = prevMembers.map((m) => {
+                      if (m.id === member.id) {
+                        return {
+                          ...m,
+                          memberships: [...m.memberships, response.data],
+                        };
+                      }
+                      return m;
+                    });
 
-            setAllMembers((prevMembers)=>{
-              const updatedMembers = prevMembers.map((m)=>{
-                if(m.id===member.id){
-                  return{
-                    ...m,
-                    memberships:[...m.memberships,response.data]
-                  }
-                }
-                return m
-              })
-
-              return updatedMembers
-            })
+                    return updatedMembers;
+                  });
+        }
             
             setMember((prev)=>{
                  
@@ -158,7 +159,9 @@ useEffect(() => {
         setIsOpen={setIsOpen}
         header={
           <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-neutral-500">
-            <h3 className="text-lg font-semibold text-white">Add New Membership</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Add New Membership
+            </h3>
             <button
               onClick={() => setIsOpen(false)}
               type="button"
@@ -182,17 +185,9 @@ useEffect(() => {
             </button>
           </div>
         }
-        footer={
-          <button
-            onClick={(e) => memberShipSubmit(e)}
-            type="submit"
-            className=" -mt-2 text-black flex justify-self-center items-center bg-lime-300 hover:bg-lime-400 focus:ring-4 focus:outline-none focus:ring-lime-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-          >
-            Add
-          </button>
-        }
+        footer={""}
       >
-        <form className="p-4 md:p-5 ">
+        <form className="p-4 md:p-5 " onSubmit={(e) => memberShipSubmit(e)}>
           <div className="grid gap-4 mb-4 grid-cols-2">
             {/* Amount */}
             <div className="col-span-1 ">
@@ -212,8 +207,9 @@ useEffect(() => {
                 value={membershipInfo.amount}
                 type="number"
                 id="price"
-                className="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                className="bg-neutral-700 outline-none border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder="Amount"
+                required
               />
             </div>
 
@@ -233,8 +229,9 @@ useEffect(() => {
                     paymentType: e.target.value,
                   })
                 }
-                id="category"
-                className="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                id="paymentType"
+                className="bg-neutral-700 border outline-none border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                required
               >
                 <option value="cash">Cash</option>
                 <option value="online">Online</option>
@@ -265,7 +262,8 @@ useEffect(() => {
                     }
                     id="datepicker-range-start"
                     type="date"
-                    className="w-full bg-neutral-800 border border-neutral-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    className="w-full bg-neutral-700 border border-neutral-800 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    required
                   />
                 </div>
 
@@ -287,7 +285,8 @@ useEffect(() => {
                     }
                     id="datepicker-range-end"
                     type="date"
-                    className="w-full bg-neutral-800 border border-neutral-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    className="w-full bg-neutral-700 border border-neutral-800 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    required
                   />
                 </div>
               </div>
@@ -302,12 +301,12 @@ useEffect(() => {
                 Total Time
               </label>
               <input
-                
                 value={membershipInfo.totalTime}
                 readOnly
                 type="text"
                 id="totalTime"
-                className="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                className="bg-neutral-700 outline-none border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                required
               />
             </div>
 
@@ -328,7 +327,7 @@ useEffect(() => {
                   })
                 }
                 id="shift"
-                className="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                className="bg-neutral-700 border outline-none border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
               >
                 <option value="evening">Evening</option>
                 <option value="morning">Morning</option>
@@ -353,24 +352,31 @@ useEffect(() => {
                   })
                 }
                 id="shift"
-                className="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                className="bg-neutral-700 border outline-none border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
               >
                 <option value="normal">Normal</option>
                 <option value="reserved">Reserved</option>
-           
               </select>
             </div>
           </div>
+
+          <button
+            type="submit"
+            className=" mt-2 text-black flex justify-self-center items-center bg-lime-300 hover:bg-lime-400 focus:ring-4 focus:outline-none focus:ring-lime-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+          >
+            Add
+          </button>
         </form>
       </Modal>
 
-      
-                  {notification && notification.state &&
-            
-                    <Notification notification={notification} setNotification={setNotification}/>
-                  }
-            
-                  <ErrorModal showError={showError} setShowError={setShowError}/> 
+      {notification && notification.state && (
+        <Notification
+          notification={notification}
+          setNotification={setNotification}
+        />
+      )}
+
+      <ErrorModal showError={showError} setShowError={setShowError} />
     </>
   );
 }

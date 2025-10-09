@@ -9,7 +9,7 @@ const SignInBtn = () => {
 
   return (
     <>
-      <a
+      <button
         onClick={() => setIsModalOpen(true)}
         className="group relative inline-flex items-center justify-center -mt-8 cursor-pointer"
       >
@@ -17,7 +17,7 @@ const SignInBtn = () => {
         <span className="relative border border-black bg-white px-8 py-3 font-mono text-sm tracking-wide transition-transform group-hover:translate-x-1.5 group-hover:translate-y-1.5">
           Sign In
         </span>
-      </a>
+      </button>
 
       <SignInModal
         isOpen={isModalOpen}

@@ -22,9 +22,13 @@ export default function DeleteMember({ member,setAllMembers }) {
     const response = await deleteMemberDB(member.id);
     if (response.success) {
 
-      setAllMembers((prevMembers)=>{
-        return prevMembers.filter((m)=>m.id!==member.id)
-      })
+      if (setAllMembers) {
+        
+        setAllMembers((prevMembers)=>{
+          return prevMembers.filter((m)=>m.id!==member.id)
+        })
+        
+      }
 
       setNotification({
         state: true,
@@ -85,7 +89,7 @@ export default function DeleteMember({ member,setAllMembers }) {
             <button
               onClick={(e) => deleteMemberSubmit(e)}
               type="submit"
-              className=" -mt-2 text-black flex  items-center bg-red-500 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-lime-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              className=" -mt-2 text-black flex  items-center bg-red-500 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-400 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Delete
             </button>
@@ -101,8 +105,7 @@ export default function DeleteMember({ member,setAllMembers }) {
       >
         <div className="mb-4 p-4">
           <p className="text-white">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dicta,
-            aperiam!
+          Delete Member Permanently ? Are you sure.. This action cannot be undone
           </p>
         </div>
       </Modal>

@@ -1,10 +1,10 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "../Modal";
 import { editMembershipDB } from "../../utils/AllMembers";
 import Notification from "../Notification";
 import ErrorModal from "../ErrorModal";
 
-export default function EditMemberShip({ info, member, setMember,setAllMembers }) {
+export default function EditMemberShip({ info, member, setMember, setAllMembers, source }) {
   const [isOpen, setIsOpen] = useState(false);
   const [membershipInfo, setMembershipInfo] = useState({
     amount: info.amount,
@@ -13,19 +13,17 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
     dueDate: info.dueDate,
     totalTime: info.totalTime,
     shift: info.shift,
-    reserved:info.reserved,
+    reserved: info.reserved,
   });
 
-         const [notification, setNotification] = useState({
-            state:false,
-            message:""
-          });
-           const [showError,setShowError]=useState({
-            state:false,
-            message:""
-           })
-
-
+  const [notification, setNotification] = useState({
+    state: false,
+    message: "",
+  });
+  const [showError, setShowError] = useState({
+    state: false,
+    message: "",
+  });
 
   useEffect(() => {
     if (membershipInfo.joiningDate && membershipInfo.dueDate) {
@@ -73,24 +71,26 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
     const response = await editMembershipDB(member.id, info, membershipInfo);
 
     if (response.success) {
-
-      setAllMembers((prevMembers)=>{
-        const updatedMembers=prevMembers.map((m)=>{
-          if (m.id===member.id) {
-            return {...m,memberships:m.memberships.map((membership)=>{
-              if (membership.id===info.id) {
-                  return{...membershipInfo,id:info.id}
-              }
-              return membership
+      if (source==="search") {
+        setAllMembers((prevMembers) => {
+          const updatedMembers = prevMembers.map((m) => {
+            if (m.id === member.id) {
+              return {
+                ...m,
+                memberships: m.memberships.map((membership) => {
+                  if (membership.id === info.id) {
+                    return { ...membershipInfo, id: info.id };
+                  }
+                  return membership;
+                }),
+              };
             }
-          )}
-          }
-          return m
-        }
-      )
-      return updatedMembers
-      })
-      
+            return m;
+          });
+          return updatedMembers;
+        });
+      }
+
       setMember((prevMember) => {
         const updatedMemberships = prevMember.memberships.map((membership) => {
           if (membership.id === info.id) {
@@ -102,15 +102,17 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
         return { ...prevMember, memberships: updatedMemberships };
       });
 
-            setNotification({
-        state:true,
-        message:"Membership Edited"
-      },[])
+      setNotification(
+        {
+          state: true,
+          message: "Membership Edited",
+        }
+      );
 
       setIsOpen(false);
       //⚠️ empty the memberhsip info
     } else {
-   setShowError({state:true,message:response.error})
+      setShowError({ state: true, message: response.error });
     }
   }
 
@@ -158,17 +160,9 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
             </button>
           </div>
         }
-        footer={
-          <button
-            onClick={(e) => editMemberShipSubmit(e)}
-            type="submit"
-            className=" -mt-2 text-black flex justify-self-center items-center bg-lime-300 hover:bg-lime-400 focus:ring-4 focus:outline-none focus:ring-lime-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-          >
-            Edit
-          </button>
-        }
+        footer={""}
       >
-        <form className="p-4 md:p-5 ">
+        <form className="p-4 md:p-5 " onSubmit={(e) => editMemberShipSubmit(e)}>
           <div className="grid gap-4 mb-4 grid-cols-2">
             {/* Amount */}
             <div className="col-span-1 ">
@@ -188,8 +182,9 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
                 value={membershipInfo.amount}
                 type="number"
                 id="price"
-                className="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                className="bg-neutral-700 outline-none border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder="Amount"
+                required
               />
             </div>
 
@@ -210,7 +205,7 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
                   })
                 }
                 id="category"
-                className="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                className="bg-neutral-700 border outline-none border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
               >
                 <option value="cash">Cash</option>
                 <option value="online">Online</option>
@@ -241,7 +236,8 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
                     }
                     id="datepicker-range-start"
                     type="date"
-                    className="w-full bg-neutral-800 border border-neutral-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    className="w-full bg-neutral-700 border border-neutral-800 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    required
                   />
                 </div>
 
@@ -263,7 +259,8 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
                     }
                     id="datepicker-range-end"
                     type="date"
-                    className="w-full bg-neutral-800 border border-neutral-600 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    className="w-full bg-neutral-700 border border-neutral-800 text-gray-200 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 placeholder-gray-400 transition duration-150 ease-in-out"
+                    required
                   />
                 </div>
               </div>
@@ -282,7 +279,8 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
                 readOnly
                 type="text"
                 id="totalTime"
-                className="bg-neutral-800 outline-none border border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                className="bg-neutral-700 outline-none border border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                required
               />
             </div>
 
@@ -303,7 +301,7 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
                   })
                 }
                 id="shift"
-                className="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                className="bg-neutral-700 border outline-none border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
               >
                 <option value="evening">Evening</option>
                 <option value="morning">Morning</option>
@@ -311,7 +309,6 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
               </select>
             </div>
 
-            
             {/* reservation */}
             <div className="col-span-2 ">
               <label
@@ -329,23 +326,31 @@ export default function EditMemberShip({ info, member, setMember,setAllMembers }
                   })
                 }
                 id="shift"
-                className="bg-neutral-800 border outline-none border-neutral-600 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                className="bg-neutral-700 border outline-none border-neutral-800 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
               >
                 <option value="normal">Normal</option>
                 <option value="reserved">Reserved</option>
-           
               </select>
             </div>
           </div>
+
+          <button
+            type="submit"
+            className=" mt-2 text-black flex justify-self-center items-center bg-lime-300 hover:bg-lime-400 focus:ring-4 focus:outline-none focus:ring-lime-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+          >
+            Edit
+          </button>
         </form>
       </Modal>
 
-              {notification && notification.state &&
-                  
-                          <Notification notification={notification} setNotification={setNotification}/>
-                        }
-                  
-                        <ErrorModal showError={showError} setShowError={setShowError}/> 
+      {notification && notification.state && (
+        <Notification
+          notification={notification}
+          setNotification={setNotification}
+        />
+      )}
+
+      <ErrorModal showError={showError} setShowError={setShowError} />
     </>
   );
 }
