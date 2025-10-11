@@ -230,3 +230,31 @@ export async function reqAdminDB(memberInfo) {
   }
 }
 
+
+
+export function saveImageToLocal(memberId, base64Image) {
+  try {
+
+    localStorage.setItem(`profileImage_${memberId}`, base64Image)
+    return {success:true}
+  
+  } catch (error) {
+    console.error("error saving image to localstorage");
+    
+    return {success:false,error:"Could not save image"}
+  }
+}
+
+export function readImageFromLocal(memberId) {
+    try {
+      const base64Image = localStorage.getItem(`profileImage_${memberId}`)
+      return base64Image
+    } catch (error) {
+      console.error("Error reading image from localstorage")
+      return null;
+    }
+}
+
+
+
+

@@ -1,23 +1,42 @@
 import { useEffect, useState } from "react";
-import { readMemberDetails } from "../utils/Members";
+import { readImageFromLocal, readMemberDetails } from "../utils/Members";
 import defaultImage from "../assets/default.jpg"
 import CheckInBtn from "../components/profile/CheckInBtn";
+import LocalImageUploader from "../components/profile/LocalImageUploader";
 
 export default function Profile() {
   const [memberInfo, setMemberInfo] = useState(null);
+  const [imageSrc, setImageSrc] = useState(defaultImage)
+  const [haslocalImage,setHasLocalImage]=useState(false)
 
   async function getDecryptedMember() {
     const response = await readMemberDetails();
     if (response.success) {
       setMemberInfo(response.data);
+
+       const localImage = readImageFromLocal(response.data.id);
+       if (localImage) {
+         setImageSrc(localImage);
+         setHasLocalImage(true);
+      }
+      
+
     } else {
       console.error(`Error ${response.error}`);
     }
   }
 
+
+  // async function 
+
   useEffect(() => {
     getDecryptedMember();
   }, []);
+
+  const handleImageSaveSuccess = (newBase64Image) => {
+    setImageSrc(newBase64Image)
+    setHasLocalImage(true)
+  }
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-white  sm:p-4 md:p-6 lg:p-8">
@@ -38,7 +57,7 @@ export default function Profile() {
               <div className="relative mb-4 sm:mb-5 md:mb-0 group/img flex-shrink-0 md:w-1/2 lg:w-2/5">
                 <div className="relative border border-black sm:border-2 overflow-hidden bg-white transition-transform group-hover/img:translate-x-1 group-hover/img:translate-y-1 sm:group-hover/img:translate-x-1.5 sm:group-hover/img:translate-y-1.5">
                   <img
-                    src={defaultImage}
+                    src={imageSrc}
                     alt="Profile"
                     className="w-full aspect-square object-cover"
                   />
@@ -105,6 +124,11 @@ export default function Profile() {
 
                 {/* Check In Button with 3D effect */}
                 <CheckInBtn memberInfo={memberInfo} />
+                {memberInfo && !haslocalImage && (
+                  <LocalImageUploader memberId={memberInfo.id}
+                  onSaveSuccess={handleImageSaveSuccess}
+                  />
+                )}
               </div>
             </div>
           </div>
